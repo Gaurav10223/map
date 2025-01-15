@@ -109,19 +109,32 @@
 
 
 
-
-const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
+const cors = require("cors");
+const express = require("express");
+const http = require("http");
+const socketIo = require("socket.io");
 const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+  cors: {
+    origin: "https://map123.vercel.app", // Replace with your deployed domain
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+});
 
 // Set the views directory and view engine
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
+
+// Enable CORS for API requests
+app.use(cors({
+  origin: "https://map123.vercel.app", // Replace with your deployed domain
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 
 // Serve static assets from the "public" folder
 app.use(express.static(path.join(__dirname, "public")));
@@ -131,7 +144,7 @@ io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
   // Listen for location data from a client
-  socket.on('send-location', (data) => {
+  socket.on("send-location", (data) => {
     io.emit("receive-location", { id: socket.id, ...data }); // Broadcast location data to all clients
   });
 
