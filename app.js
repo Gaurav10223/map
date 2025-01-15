@@ -112,17 +112,18 @@
 const cors = require("cors");
 const express = require("express");
 const http = require("http");
-const socketIo = require("socket.io");
+const { Server } = require("socket.io");
 const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
+const io = new Server(server, {
   cors: {
     origin: "https://map123.vercel.app", // Replace with your deployed domain
     methods: ["GET", "POST"],
     credentials: true
   },
+  transports: ["websocket", "polling"] // Ensure fallback to polling if WebSocket fails
 });
 
 // Set the views directory and view engine
@@ -160,12 +161,15 @@ app.get("/", (req, res) => {
   res.render("index"); // Render the "index.ejs" template
 });
 
+// Handle keep-alive to prevent connection timeouts on serverless environments
+server.keepAliveTimeout = 60000; // 60 seconds
+server.headersTimeout = 65000; // Slightly higher than keepAliveTimeout
+
 // Start the server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
 
 
 
